@@ -1,0 +1,14 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+.env
+data/
+storage/*
+!storage/.gitkeep
+*.db
+*.log
+.git/
+.gitignore
+README.md
+API.md

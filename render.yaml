@@ -1,0 +1,53 @@
+# Render Blueprint - https://render.com/docs/blueprint-spec
+#
+# Deploy: push this repo to GitHub, then on Render dashboard choose
+# "New +" -> "Blueprint" and point it at the repo. Render reads this
+# file and provisions everything below automatically.
+#
+# IMPORTANT: Render's default filesystem is EPHEMERAL - files written to
+# /app/storage or /app/data are lost on every deploy/restart. The disk
+# mount below gives /app/storage persistence (SQLite DB + generated
+# media both live under there by pointing DATABASE_URL/LOCAL_STORAGE_PATH
+# at it - see envVars). Free-tier Render does not support persistent
+# disks; you'll need at least the Starter plan for the disk to attach.
+
+services:
+  - type: web
+    name: ai-video-studio-backend
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    healthCheckPath: /health
+    envVars:
+      - key: MOCK_MODE
+        value: "true"          # flip to "false" once HF_TOKEN is set
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: DATABASE_URL
+        value: sqlite:////app/storage/data/app.db
+      - key: LOCAL_STORAGE_PATH
+        value: /app/storage
+      # Render auto-injects RENDER_EXTERNAL_URL (e.g.
+      # https://ai-video-studio-backend.onrender.com). Set PUBLIC_BASE_URL
+      # to that same value manually in the dashboard after the first
+      # deploy - it can't be known before Render assigns the URL, and
+      # the app uses it to build the /media links it returns to the
+      # frontend.
+      - key: PUBLIC_BASE_URL
+        sync: false
+      - key: CORS_ORIGINS
+        value: "*"              # tighten to your frontend's real origin before going live
+      - key: HF_TOKEN
+        sync: false             # set manually in the Render dashboard - never commit real tokens
+      - key: HF_VIDEO_MODEL
+        value: Lightricks/LTX-Video-0.9.8-13B-distilled
+      - key: HF_PROVIDER
+        value: auto
+      - key: HF_LLM_MODEL
+        value: meta-llama/Llama-3.3-70B-Instruct
+    disk:
+      name: ai-video-studio-storage
+      mountPath: /app/storage
+      sizeGB: 5
