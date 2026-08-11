@@ -1,11 +1,14 @@
 services:
   - type: web
     name: ai-video-studio-backend
-    runtime: docker
-    dockerfilePath: ./Dockerfile
+    runtime: python
     plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
       - key: MOCK_MODE
         value: "true"
       - key: ENVIRONMENT
@@ -13,9 +16,9 @@ services:
       - key: DEBUG
         value: "false"
       - key: DATABASE_URL
-        value: sqlite:////app/storage/data/app.db
+        value: sqlite:////opt/render/project/src/data/app.db
       - key: LOCAL_STORAGE_PATH
-        value: /app/storage
+        value: /opt/render/project/src/storage
       - key: PUBLIC_BASE_URL
         sync: false
       - key: CORS_ORIGINS
